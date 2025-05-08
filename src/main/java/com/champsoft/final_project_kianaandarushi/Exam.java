@@ -8,10 +8,12 @@ public class Exam {
 
     private HashMap<Integer, Question> questions;
     private HashMap<Integer,String>submittedAnswers;
+    private int grade;
 
     public Exam() {
         this.questions = new HashMap<>();
         this.submittedAnswers = new HashMap<>();
+        this.grade = 0;
     }
     public Exam (LinkedList<Question> qList){
         this.questions = new HashMap<>();
@@ -20,7 +22,17 @@ public class Exam {
             Question question = qList.get(i);
             this.questions.put(i+1, question);
         }
+        this.grade = 0;
     }
+
+    public int getGrade() {
+        return grade;
+    }
+
+    public void setGrade(int grade) {
+        this.grade = grade;
+    }
+
     public void clear(){
         this.questions.clear();
         this.submittedAnswers.clear();
@@ -66,5 +78,8 @@ public class Exam {
 
     public int getNumberOfQuestions(){
         return this.questions.size()+1;
+    }
+
+    public void setSubmittedAnswers(int i, String answer) {
     }
 }

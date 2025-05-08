@@ -3,179 +3,208 @@ package com.champsoft.final_project_kianaandarushi;
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
-import javafx.scene.image.ImageView;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import javafx.scene.image.Image;
-import javafx.scene.control.Button;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-
 public class HelloApplication extends Application {
+
     private Exam myExam;
+    private Label labelShowGrades = new Label("Grade: ");
+    private List<ToggleGroup> toggleGroups = new ArrayList<>();
+
     @Override
     public void start(Stage stage) throws IOException {
-
+        // Initialize question bank and exam
         QuestionBank myBank = new QuestionBank();
         myBank.readMCQ("src/main/resources/mcq.txt");
         myBank.readTFQ("src/main/resources/tfq.txt");
 
         List<Integer> indxesList = new ArrayList<>(Arrays.asList(11, 0, 5, 10, 9, 8, 7, 6));
-
-
         for (int i = 0; i < 3; i++) {
             int randomIndex = ThreadLocalRandom.current().nextInt(1, 15); // 15 is exclusive
             indxesList.add(randomIndex);
         }
 
-        int[] indxes = indxesList.stream().mapToInt(Integer::intValue).toArray();
-        LinkedList<Question> exam = myBank.selectRanQuestion(indxes);
-        myExam = new Exam(exam);
+        int[] indexes = indxesList.stream().mapToInt(Integer::intValue).toArray();
+        LinkedList<Question> examQuestions = myBank.selectRanQuestion(indexes);
+        myExam = new Exam(examQuestions);
         myExam.printAllQuestions();
 
-        VBox root = new VBox();
+        // Create the main content container
+        VBox contentBox = new VBox();
+        contentBox.setSpacing(10);
+        contentBox.setPadding(new Insets(10));
 
-        MenuBar menuBarMain = buildMenuBar();
-        root.getChildren().add(menuBarMain);
+        // Add components to contentBox
+        contentBox.getChildren().add(buildMenuBar());
+        contentBox.getChildren().add(buildBanner());
+        contentBox.getChildren().add(buildGradeLabel());
+        contentBox.getChildren().add(new Separator());
 
-        HBox hboxGrade = new HBox();
-        hboxGrade.setAlignment(Pos.CENTER);
-        hboxGrade.getChildren().add(new Label("Grade:"));
+        VBox[] questionBoxes = buildQuestionBoxes();
+        contentBox.getChildren().addAll(questionBoxes);
+        contentBox.getChildren().add(new Separator());
+        contentBox.getChildren().add(buildFooter());
 
-        VBox[] vboxQuestions = buildQuestionsVboxes();
+        // Create and configure the ScrollPane
+        ScrollPane scrollPane = new ScrollPane(contentBox);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setPannable(true);
 
-
-        HBox hBoxBanner = buildBanner();
-        root.getChildren().add(hBoxBanner);
-
-        root.getChildren().add(hboxGrade);
-        root.getChildren().add(new Separator());
-        root.getChildren().addAll(vboxQuestions);
-        root.getChildren().add(new Separator());
-
-        HBox hBoxButtons = buildFooter();
-        hBoxButtons.setAlignment(Pos.CENTER);
-        root.getChildren().add(hBoxButtons);
-
-
-        Label helloWorldLabel = new Label("Hello World");
-        Scene scene = new Scene(root, 800, 800);
-        stage.setTitle("ChampExamen (TM) application (C)");
+        // Set the ScrollPane as the root of the scene
+        Scene scene = new Scene(scrollPane, 800, 800);
+        stage.setTitle("ChampExamen");
         stage.setScene(scene);
         stage.show();
     }
 
-    private VBox[] buildQuestionsVboxes() {
-        int numberOfQuestionsInExam = myExam.getQuestions().size();
-        VBox[] vBoxes = new VBox[numberOfQuestionsInExam];
+    private VBox buildGradeLabel() {
+        HBox gradeBox = new HBox(10, new Label("Grade:"), labelShowGrades);
+        gradeBox.setAlignment(Pos.CENTER);
+        VBox container = new VBox(gradeBox);
+        container.setAlignment(Pos.CENTER);
+        return container;
+    }
 
-        for (int i = 0; i<numberOfQuestionsInExam; i++){
-            Question question = myExam.getQuestion(i+1);
-            if (question.getQuestionType()==QuestionType.TFQ){
-                vBoxes[i] = buildTrueFalseQ(1, (TFQuestion) question);
-            } else { // it is MCQ
-                vBoxes[i] = buildMCQ(2, (MCQuestion) question);
+    private VBox[] buildQuestionBoxes() {
+        int numQuestions = myExam.getQuestions().size();
+        VBox[] questionVBoxes = new VBox[numQuestions];
+
+        for (int i = 0; i < numQuestions; i++) {
+            Question q = myExam.getQuestion(i + 1);
+            if (q.getQuestionType() == QuestionType.TFQ) {
+                questionVBoxes[i] = buildTrueFalseQ((TFQuestion) q);
+            } else {
+                questionVBoxes[i] = buildMCQ((MCQuestion) q);
             }
         }
-        return vBoxes;
+
+        return questionVBoxes;
     }
 
-    public VBox buildTrueFalseQ(int questionNumber, TFQuestion tfQuestion1){
-        Label labelQuestionText = new Label(tfQuestion1.getQuestionText());
-        RadioButton radioButtonTrue = new RadioButton("True ");
-        RadioButton radioButtonFalse = new RadioButton("False");
-        HBox hBox = new HBox(10, radioButtonTrue, radioButtonFalse);
-        VBox vBox = new VBox(labelQuestionText, hBox);
-        vBox.getChildren().add(new Separator());
-        return vBox;
+    private VBox buildTrueFalseQ(TFQuestion tfq) {
+        Label questionLabel = new Label(tfq.getQuestionText());
+        RadioButton trueBtn = new RadioButton("True");
+        RadioButton falseBtn = new RadioButton("False");
+
+        ToggleGroup group = new ToggleGroup();
+        trueBtn.setToggleGroup(group);
+        falseBtn.setToggleGroup(group);
+        toggleGroups.add(group);
+
+        HBox options = new HBox(10, trueBtn, falseBtn);
+        VBox box = new VBox(10, questionLabel, options, new Separator());
+        return box;
     }
 
-    public VBox buildMCQ(int questionNumber, MCQuestion mcqQuestion){
-        Label labelQuestionText = new Label(mcqQuestion.getQuestionText());
-        VBox vBox = new VBox(labelQuestionText);
+    private VBox buildMCQ(MCQuestion mcq) {
+        Label questionLabel = new Label(mcq.getQuestionText());
+        VBox box = new VBox(10, questionLabel);
+        ToggleGroup group = new ToggleGroup();
+        toggleGroups.add(group);
 
-        LinkedList<String> options = mcqQuestion.getOptions();
-        ToggleGroup toggleGroup = new ToggleGroup();
-        for (String s : options){
-            RadioButton radioButton = new RadioButton(s);
-            radioButton.setToggleGroup(toggleGroup);
-            vBox.getChildren().add(radioButton);
-
+        for (String option : mcq.getOptions()) {
+            RadioButton rb = new RadioButton(option);
+            rb.setToggleGroup(group);
+            box.getChildren().add(rb);
         }
-        vBox.getChildren().add(new Separator());
-        return vBox;
-    }
 
-    private HBox buildBanner() {
-        Image logoObj = new Image("/logo.png");
-        ImageView imageViewLogo = new ImageView(logoObj);
-
-        imageViewLogo.setPreserveRatio(true);
-        imageViewLogo.setFitHeight(100);
-        Image bannerObj = new Image("/banner.png");
-        ImageView imageViewBanner = new ImageView(bannerObj);
-        imageViewBanner.setPreserveRatio(true);
-        imageViewBanner.setFitHeight(100);
-        HBox hboxBanner = new HBox();
-        hboxBanner.getChildren().addAll(imageViewLogo, imageViewBanner);
-        return hboxBanner;
+        box.getChildren().add(new Separator());
+        return box;
     }
 
     private HBox buildFooter() {
-        HBox hboxFooter = new HBox(10);
-        Button buttonClear = new Button("Clear");
-        Button buttonSave = new Button("Save");
-        Button buttonSubmit = new Button("Submit");
+        Button clearBtn = new Button("Clear");
+        Button saveBtn = new Button("Save");
+        Button submitBtn = new Button("Submit");
 
-        // register to actions
-        buttonClear.setOnAction(e -> clearExamAnswers());
-        buttonSave.setOnAction(e -> saveExamAnswers());
-        buttonSubmit.setOnAction(new SubmitEventHandler());
+        clearBtn.setOnAction(e -> clearExamAnswers());
+        saveBtn.setOnAction(e -> saveExamAnswers());
+        submitBtn.setOnAction(new SubmitEventHandler());
 
-        hboxFooter.getChildren().addAll(buttonClear, buttonSave, buttonSubmit);
-        return hboxFooter;
+        HBox box = new HBox(20, clearBtn, saveBtn, submitBtn);
+        box.setAlignment(Pos.CENTER);
+        return box;
     }
 
-    private void saveExamAnswers() {
-    }
+    private HBox buildBanner() {
+        ImageView logo = new ImageView(new Image("/logo.png"));
+        logo.setFitHeight(100);
+        logo.setPreserveRatio(true);
 
-    private void clearExamAnswers() {
+        ImageView banner = new ImageView(new Image("/banner.png"));
+        banner.setFitHeight(100);
+        banner.setPreserveRatio(true);
+
+        HBox hbox = new HBox(10, logo, banner);
+        return hbox;
     }
 
     private MenuBar buildMenuBar() {
-        MenuBar menuBarMain = new MenuBar();
-        Menu menuFile = new Menu("File");
-        Menu menuEdit = new Menu("Edit");
-        Menu menuQuiz = new Menu("Quiz");
-        Menu menuExtras = new Menu("Extras");
-        Menu menuHelp = new Menu("Help");
-        menuBarMain.getMenus().addAll(menuFile, menuEdit, menuQuiz, menuExtras, menuHelp);
-        return menuBarMain;
+        MenuBar menuBar = new MenuBar();
+        menuBar.getMenus().addAll(
+                new Menu("File"),
+                new Menu("Edit"),
+                new Menu("Quiz"),
+                new Menu("Extras"),
+                new Menu("Help")
+        );
+        return menuBar;
+    }
+
+    private void saveExamAnswers() {
+        // Implement saving functionality as needed
+        System.out.println("Answers saved (functionality not implemented)");
+    }
+
+    private void clearExamAnswers() {
+        for (ToggleGroup group : toggleGroups) {
+            group.selectToggle(null);
+        }
+        myExam.clear(); // Implement this method in Exam class
+        labelShowGrades.setText("Grade: ");
+    }
+
+    private class SubmitEventHandler implements EventHandler<ActionEvent> {
+        @Override
+        public void handle(ActionEvent event) {
+            int total = myExam.getQuestions().size();
+            int grade = 0;
+
+            for (int i = 0; i < total; i++) {
+                ToggleGroup group = toggleGroups.get(i);
+                Toggle selected = group.getSelectedToggle();
+
+                if (selected != null) {
+                    String answer = ((RadioButton) selected).getText().trim();
+                    myExam.setSubmittedAnswers(i + 1, answer);
+                }
+
+                Question q = myExam.getQuestion(i + 1);
+                String submitted = myExam.getsubmittedAnswer(i + 1);
+                String correct = q.getCorrectAnswer();
+
+                if (submitted != null && submitted.equalsIgnoreCase(correct)) {
+                    grade++;
+                }
+            }
+
+            myExam.setGrade(grade);
+            labelShowGrades.setText(String.format("%d out of %d (%.2f%%)", grade, total, (100.0 * grade / total)));
+        }
     }
 
     public static void main(String[] args) {
         launch();
-
-    }
-    public static class SubmitEventHandler implements EventHandler<ActionEvent> {
-
-
-        @Override
-        public void handle(ActionEvent actionEvent) {
-            System.out.println("Submit button clicked");
-        }
     }
 }
