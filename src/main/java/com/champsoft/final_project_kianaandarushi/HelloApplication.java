@@ -157,14 +157,54 @@ public class HelloApplication extends Application {
 
     private MenuBar buildMenuBar() {
         MenuBar menuBar = new MenuBar();
-        menuBar.getMenus().addAll(
-                new Menu("File"),
-                new Menu("Edit"),
-                new Menu("Quiz"),
-                new Menu("Extras"),
-                new Menu("Help")
-        );
+
+        // File Menu
+        Menu fileMenu = new Menu("File");
+        MenuItem saveItem = new MenuItem("Save Answers");
+        MenuItem clearItem = new MenuItem("Clear Answers");
+        MenuItem exitItem = new MenuItem("Exit");
+
+        saveItem.setOnAction(e -> saveExamAnswers());
+        clearItem.setOnAction(e -> clearExamAnswers());
+        exitItem.setOnAction(e -> System.exit(0));
+        fileMenu.getItems().addAll(saveItem, clearItem, new SeparatorMenuItem(), exitItem);
+
+        // Edit Menu (disabled placeholder items)
+        Menu editMenu = new Menu("Edit");
+        MenuItem undoItem = new MenuItem("Undo");
+        MenuItem redoItem = new MenuItem("Redo");
+        undoItem.setDisable(true);
+        redoItem.setDisable(true);
+        editMenu.getItems().addAll(undoItem, redoItem);
+
+        // Quiz Menu
+        Menu quizMenu = new Menu("Quiz");
+        MenuItem submitItem = new MenuItem("Submit Quiz");
+        submitItem.setOnAction(new SubmitEventHandler());
+        quizMenu.getItems().add(submitItem);
+
+        // Extras Menu (placeholder)
+        Menu extrasMenu = new Menu("Extras");
+        MenuItem shuffleItem = new MenuItem("Shuffle Questions");
+        shuffleItem.setDisable(true);
+        extrasMenu.getItems().add(shuffleItem);
+
+        // Help Menu
+        Menu helpMenu = new Menu("Help");
+        MenuItem aboutItem = new MenuItem("About");
+        aboutItem.setOnAction(e -> showAboutDialog());
+        helpMenu.getItems().add(aboutItem);
+
+        menuBar.getMenus().addAll(fileMenu, editMenu, quizMenu, extrasMenu, helpMenu);
         return menuBar;
+    }
+
+    private void showAboutDialog() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("About ChampExamen");
+        alert.setHeaderText("ChampExamen v1.0");
+        alert.setContentText("Developed by Kiana and Arushi\n\nA JavaFX app for testing multiple-choice and true/false questions.");
+        alert.showAndWait();
     }
 
     private void saveExamAnswers() {
@@ -220,9 +260,7 @@ public class HelloApplication extends Application {
         }
     }
 
-
     public static void main(String[] args) {
         launch();
     }
-
 }
