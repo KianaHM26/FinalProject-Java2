@@ -33,9 +33,8 @@ public class MCQuestion extends Question {
 
     @Override
     public String toString() {
-        return "MCQuestion{" + this.getQuestionText()+"\n"+
-                "options=" + options + "\nAND: "+
-                this.getCorrectAnswer()+
-                '}';
+        return "MCQuestion: " + this.getQuestionText()+"\n"+
+                "options = " + options + "\nAND: "+
+                this.getCorrectAnswer();
     }
 }

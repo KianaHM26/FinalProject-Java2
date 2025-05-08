@@ -11,7 +11,7 @@ public class TFQuestion extends Question {
 
     @Override
     public String toString() {
-        return "TFQuestion{" +  this.getQuestionText() + "}";
+        return "TFQuestion: " +  this.getQuestionText() + " ";
     }
 
 }
