@@ -16,11 +16,14 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+import static javafx.application.Application.launch;
+
 public class HelloApplication extends Application {
 
     private Exam myExam;
     private Label labelShowGrades = new Label("Grade: ");
     private List<ToggleGroup> toggleGroups = new ArrayList<>();
+    private Map<Integer, ToggleGroup> questionToggleGroups = new HashMap<>();
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -83,17 +86,17 @@ public class HelloApplication extends Application {
         for (int i = 0; i < numQuestions; i++) {
             Question q = myExam.getQuestion(i + 1);
             if (q.getQuestionType() == QuestionType.TFQ) {
-                questionVBoxes[i] = buildTrueFalseQ((TFQuestion) q);
+                questionVBoxes[i] = buildTrueFalseQ(i + 1, (TFQuestion) q);
             } else {
-                questionVBoxes[i] = buildMCQ((MCQuestion) q);
+                questionVBoxes[i] = buildMCQ(i + 1, (MCQuestion) q);
             }
         }
 
         return questionVBoxes;
     }
 
-    private VBox buildTrueFalseQ(TFQuestion tfq) {
-        Label questionLabel = new Label(tfq.getQuestionText());
+    private VBox buildTrueFalseQ(int questionNumber, TFQuestion tfq) {
+        Label questionLabel = new Label("Q" + questionNumber + ": " + tfq.getQuestionText());
         RadioButton trueBtn = new RadioButton("True");
         RadioButton falseBtn = new RadioButton("False");
 
@@ -101,17 +104,19 @@ public class HelloApplication extends Application {
         trueBtn.setToggleGroup(group);
         falseBtn.setToggleGroup(group);
         toggleGroups.add(group);
+        questionToggleGroups.put(questionNumber, group);
 
         HBox options = new HBox(10, trueBtn, falseBtn);
         VBox box = new VBox(10, questionLabel, options, new Separator());
         return box;
     }
 
-    private VBox buildMCQ(MCQuestion mcq) {
-        Label questionLabel = new Label(mcq.getQuestionText());
+    private VBox buildMCQ(int questionNumber, MCQuestion mcq) {
+        Label questionLabel = new Label("Q" + questionNumber + ": " + mcq.getQuestionText());
         VBox box = new VBox(10, questionLabel);
         ToggleGroup group = new ToggleGroup();
         toggleGroups.add(group);
+        questionToggleGroups.put(questionNumber, group);
 
         for (String option : mcq.getOptions()) {
             RadioButton rb = new RadioButton(option);
@@ -163,8 +168,19 @@ public class HelloApplication extends Application {
     }
 
     private void saveExamAnswers() {
-        // Implement saving functionality as needed
-        System.out.println("Answers saved (functionality not implemented)");
+        int total = myExam.getQuestions().size();
+
+        for (int i = 0; i < total; i++) {
+            ToggleGroup group = toggleGroups.get(i);
+            Toggle selected = group.getSelectedToggle();
+
+            if (selected != null) {
+                String answer = ((RadioButton) selected).getText().trim();
+                myExam.setSubmittedAnswers(i + 1, answer);
+            }
+        }
+
+        System.out.println("Answers saved.");
     }
 
     private void clearExamAnswers() {
@@ -204,7 +220,9 @@ public class HelloApplication extends Application {
         }
     }
 
+
     public static void main(String[] args) {
         launch();
     }
+
 }
