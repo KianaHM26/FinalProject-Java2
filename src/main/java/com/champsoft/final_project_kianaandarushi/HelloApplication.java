@@ -1,5 +1,4 @@
 package com.champsoft.final_project_kianaandarushi;
-
 import javafx.application.Application;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -11,44 +10,34 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.stage.Stage;
-
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
-
-import static javafx.application.Application.launch;
 
 public class HelloApplication extends Application {
 
     private Exam myExam;
     private Label labelShowGrades = new Label("Grade: ");
     private List<ToggleGroup> toggleGroups = new ArrayList<>();
-    private Map<Integer, ToggleGroup> questionToggleGroups = new HashMap<>();
 
     @Override
     public void start(Stage stage) throws IOException {
-        // Initialize question bank and exam
         QuestionBank myBank = new QuestionBank();
         myBank.readMCQ("src/main/resources/mcq.txt");
         myBank.readTFQ("src/main/resources/tfq.txt");
 
         List<Integer> indxesList = new ArrayList<>(Arrays.asList(11, 0, 5, 10, 9, 8, 7, 6));
         for (int i = 0; i < 3; i++) {
-            int randomIndex = ThreadLocalRandom.current().nextInt(1, 15); // 15 is exclusive
+            int randomIndex = ThreadLocalRandom.current().nextInt(1, 15);
             indxesList.add(randomIndex);
         }
 
         int[] indexes = indxesList.stream().mapToInt(Integer::intValue).toArray();
         LinkedList<Question> examQuestions = myBank.selectRanQuestion(indexes);
         myExam = new Exam(examQuestions);
-        myExam.printAllQuestions();
 
-        // Create the main content container
-        VBox contentBox = new VBox();
-        contentBox.setSpacing(10);
+        VBox contentBox = new VBox(10);
         contentBox.setPadding(new Insets(10));
-
-        // Add components to contentBox
         contentBox.getChildren().add(buildMenuBar());
         contentBox.getChildren().add(buildBanner());
         contentBox.getChildren().add(buildGradeLabel());
@@ -59,20 +48,19 @@ public class HelloApplication extends Application {
         contentBox.getChildren().add(new Separator());
         contentBox.getChildren().add(buildFooter());
 
-        // Create and configure the ScrollPane
         ScrollPane scrollPane = new ScrollPane(contentBox);
         scrollPane.setFitToWidth(true);
         scrollPane.setPannable(true);
 
-        // Set the ScrollPane as the root of the scene
         Scene scene = new Scene(scrollPane, 800, 800);
+        scene.getStylesheets().add(getClass().getResource("/style.css").toExternalForm());
         stage.setTitle("ChampExamen");
         stage.setScene(scene);
         stage.show();
     }
 
     private VBox buildGradeLabel() {
-        HBox gradeBox = new HBox(10, new Label("Grade:"), labelShowGrades);
+        HBox gradeBox = new HBox(10, new Label(""), labelShowGrades);
         gradeBox.setAlignment(Pos.CENTER);
         VBox container = new VBox(gradeBox);
         container.setAlignment(Pos.CENTER);
@@ -91,20 +79,18 @@ public class HelloApplication extends Application {
                 questionVBoxes[i] = buildMCQ(i + 1, (MCQuestion) q);
             }
         }
-
         return questionVBoxes;
     }
 
     private VBox buildTrueFalseQ(int questionNumber, TFQuestion tfq) {
         Label questionLabel = new Label("Q" + questionNumber + ": " + tfq.getQuestionText());
-        RadioButton trueBtn = new RadioButton("True");
-        RadioButton falseBtn = new RadioButton("False");
+        RadioButton trueBtn = new RadioButton("T");
+        RadioButton falseBtn = new RadioButton("F");
 
         ToggleGroup group = new ToggleGroup();
         trueBtn.setToggleGroup(group);
         falseBtn.setToggleGroup(group);
         toggleGroups.add(group);
-        questionToggleGroups.put(questionNumber, group);
 
         HBox options = new HBox(10, trueBtn, falseBtn);
         VBox box = new VBox(10, questionLabel, options, new Separator());
@@ -116,7 +102,6 @@ public class HelloApplication extends Application {
         VBox box = new VBox(10, questionLabel);
         ToggleGroup group = new ToggleGroup();
         toggleGroups.add(group);
-        questionToggleGroups.put(questionNumber, group);
 
         for (String option : mcq.getOptions()) {
             RadioButton rb = new RadioButton(option);
@@ -143,16 +128,22 @@ public class HelloApplication extends Application {
     }
 
     private HBox buildBanner() {
-        ImageView logo = new ImageView(new Image("/logo.png"));
-        logo.setFitHeight(100);
-        logo.setPreserveRatio(true);
+        //images given on the top of the page
+        Image logo = new Image("logo.png");
+        ImageView logoView = new ImageView(logo);
+        logoView.setFitWidth(200);
+        logoView.setPreserveRatio(true);
+        logoView.setFitHeight(200);
 
-        ImageView banner = new ImageView(new Image("/banner.png"));
-        banner.setFitHeight(100);
-        banner.setPreserveRatio(true);
+        Image banner = new Image("banner.png");
+        ImageView viewBanner = new ImageView(banner);
 
-        HBox hbox = new HBox(10, logo, banner);
-        return hbox;
+        viewBanner.setFitHeight(2000);
+        viewBanner.setPreserveRatio(true);
+        viewBanner.setFitWidth(300);
+        HBox hBox = new HBox(10, logoView, viewBanner);
+
+        return hBox;
     }
 
     private MenuBar buildMenuBar() {
@@ -203,39 +194,35 @@ public class HelloApplication extends Application {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("About ChampExamen");
         alert.setHeaderText("ChampExamen v1.0");
-        alert.setContentText("Developed by Kiana and Arushi\n\nA JavaFX app for testing multiple-choice and true/false questions.");
+        alert.setContentText("Developed by Kiana and Arushi (if you have questions ask Haikel, cuz we have no idea(IT IS A JOKE))\n\nA JavaFX app for " +
+                "testing multiple-choice and true/false questions.");
         alert.showAndWait();
     }
 
     private void saveExamAnswers() {
-        int total = myExam.getQuestions().size();
-
-        for (int i = 0; i < total; i++) {
+        for (int i = 0; i < myExam.getQuestions().size(); i++) {
             ToggleGroup group = toggleGroups.get(i);
             Toggle selected = group.getSelectedToggle();
-
             if (selected != null) {
                 String answer = ((RadioButton) selected).getText().trim();
                 myExam.setSubmittedAnswers(i + 1, answer);
             }
         }
-
-        System.out.println("Answers saved.");
     }
 
     private void clearExamAnswers() {
         for (ToggleGroup group : toggleGroups) {
             group.selectToggle(null);
         }
-        myExam.clear(); // Implement this method in Exam class
+        myExam.clear();
         labelShowGrades.setText("Grade: ");
     }
 
     private class SubmitEventHandler implements EventHandler<ActionEvent> {
         @Override
         public void handle(ActionEvent event) {
-            int total = myExam.getQuestions().size();
             int grade = 0;
+            int total = myExam.getQuestions().size();
 
             for (int i = 0; i < total; i++) {
                 ToggleGroup group = toggleGroups.get(i);
@@ -246,9 +233,8 @@ public class HelloApplication extends Application {
                     myExam.setSubmittedAnswers(i + 1, answer);
                 }
 
-                Question q = myExam.getQuestion(i + 1);
-                String submitted = myExam.getsubmittedAnswer(i + 1);
-                String correct = q.getCorrectAnswer();
+                String submitted = myExam.getSubmittedAnswers().get(i + 1);
+                String correct = myExam.getQuestion(i + 1).getCorrectAnswer();
 
                 if (submitted != null && submitted.equalsIgnoreCase(correct)) {
                     grade++;
