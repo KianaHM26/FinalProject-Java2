@@ -14,6 +14,10 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
+
+
+//Start of my code:
+
 public class HelloApplication extends Application {
 
     private Exam myExam;
@@ -26,8 +30,9 @@ public class HelloApplication extends Application {
         myBank.readMCQ("src/main/resources/mcq.txt");
         myBank.readTFQ("src/main/resources/tfq.txt");
 
-        List<Integer> indxesList = new ArrayList<>(Arrays.asList(11, 0, 5, 10, 9, 8, 7, 6));
-        for (int i = 0; i < 3; i++) {
+        List<Integer> indxesList = new ArrayList<>();
+        // Randomly select 10 question indexes from 1 to 14
+        for (int i = 0; i < 10; i++) {
             int randomIndex = ThreadLocalRandom.current().nextInt(1, 15);
             indxesList.add(randomIndex);
         }
@@ -43,11 +48,14 @@ public class HelloApplication extends Application {
         contentBox.getChildren().add(buildGradeLabel());
         contentBox.getChildren().add(new Separator());
 
+        // Add questions
         VBox[] questionBoxes = buildQuestionBoxes();
         contentBox.getChildren().addAll(questionBoxes);
         contentBox.getChildren().add(new Separator());
         contentBox.getChildren().add(buildFooter());
 
+
+        // Wrap the VBox in a ScrollPane
         ScrollPane scrollPane = new ScrollPane(contentBox);
         scrollPane.setFitToWidth(true);
         scrollPane.setPannable(true);
@@ -67,6 +75,7 @@ public class HelloApplication extends Application {
         return container;
     }
 
+    // Builds VBox containers for each question
     private VBox[] buildQuestionBoxes() {
         int numQuestions = myExam.getQuestions().size();
         VBox[] questionVBoxes = new VBox[numQuestions];
@@ -82,6 +91,8 @@ public class HelloApplication extends Application {
         return questionVBoxes;
     }
 
+
+    // Build UI for a TF question
     private VBox buildTrueFalseQ(int questionNumber, TFQuestion tfq) {
         Label questionLabel = new Label("Q" + questionNumber + ": " + tfq.getQuestionText());
         RadioButton trueBtn = new RadioButton("T");

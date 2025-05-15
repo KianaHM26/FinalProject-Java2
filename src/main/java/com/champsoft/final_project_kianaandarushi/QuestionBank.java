@@ -41,7 +41,7 @@ public class QuestionBank {
                 options.clear();//important otherwise options will be appended to old options
                 String opt = "";
                 String option = "";
-
+                // Read options until we find "ANS"
                 do {
                     line = scObj.nextLine().trim();
 //                    System.out.println("option text: " + option);
